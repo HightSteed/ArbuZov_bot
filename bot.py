@@ -9,7 +9,6 @@ from aiogram.enums import ParseMode
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 import google.generativeai as genai
 
-# Получаем ключи из переменных окружения Render
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 AI_API_KEY = os.getenv("AI_API_KEY")
 
@@ -17,7 +16,6 @@ if not TELEGRAM_TOKEN:
     print("Ошибка: Не задан TELEGRAM_TOKEN!")
     sys.exit(1)
 
-# Настраиваем Gemini API с актуальной моделью
 if AI_API_KEY:
     genai.configure(api_key=AI_API_KEY)
     ai_model = genai.GenerativeModel("gemini-3.8-flash")
@@ -28,7 +26,6 @@ else:
 bot = Bot(token=TELEGRAM_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# Создаем клавиатуру с кнопками
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="🔔 Режим Фокуса")],
@@ -68,7 +65,8 @@ async def handle_ai_message(message: types.Message):
 
     await bot.send_chat_action(chat_id=message.chat.id, action="typing")
     try:
-        response = ai_model.generate_content(message.text)
+        # Используем асинхронный вызов, чтобы бот не зависал
+        response = await ai_model.generate_content_async(message.text)
         await message.answer(response.text)
     except Exception as e:
         await message.answer(f"Произошла ошибка при обращении к ИИ: {e}")
@@ -78,5 +76,5 @@ async def main():
     print("Запуск бота со всеми функциями и ИИ...")
     await dp.start_polling(bot)
 
-if __name__ == "__main__":
+if name == "main":
     asyncio.run(main())

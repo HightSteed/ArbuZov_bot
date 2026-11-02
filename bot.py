@@ -17,11 +17,10 @@ if not TELEGRAM_TOKEN:
     print("Ошибка: Не задан TELEGRAM_TOKEN!")
     sys.exit(1)
 
-# Настраиваем Gemini API, если ключ задан
+# Настраиваем Gemini API с актуальной моделью
 if AI_API_KEY:
     genai.configure(api_key=AI_API_KEY)
-    # Используем актуальную модель Gemini
-    ai_model = genai.GenerativeModel("gemini-2.5-flash")
+    ai_model = genai.GenerativeModel("gemini-3.8-flash")
 else:
     ai_model = None
     print("Предупреждение: Не задан AI_API_KEY, ИИ-функции будут отключены.")
@@ -29,7 +28,7 @@ else:
 bot = Bot(token=TELEGRAM_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# Создаем клавиатуру с кнопками из интерфейса бота
+# Создаем клавиатуру с кнопками
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📊 Статистика"), KeyboardButton(text="🔔 Режим Фокуса")],
@@ -41,14 +40,13 @@ main_keyboard = ReplyKeyboardMarkup(
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
-        "Здарова! Бот Арбузов успешно запущен и готов к работе. Выбирай нужную функцию на клавиатуре или просто пиши свой вопрос сюда — я отвечу через ИИ!",
+        "Здарова! Бот Арбузов успешно запущен и готов к работе. Выбирай нужную функцию на клавиатуре или пиши вопрос — я отвечу через ИИ!",
         reply_markup=main_keyboard
     )
 
-# Обработка нажатий на кнопки
 @dp.message(F.text == "📊 Статистика")
 async def btn_stats(message: types.Message):
-    await message.answer("📊 Раздел статистики: здесь будет отображаться вся информация и прогресс.")
+    await message.answer("📊 Раздел статистики: здесь отображается вся информация и прогресс.")
 
 @dp.message(F.text == "🔔 Режим Фокуса")
 async def btn_focus(message: types.Message):
@@ -62,14 +60,12 @@ async def btn_templates(message: types.Message):
 async def btn_reminders(message: types.Message):
     await message.answer("⏰ Список твоих активных напоминаний пуст.")
 
-# Обработка любых других текстовых сообщений через Gemini AI
 @dp.message(F.text)
 async def handle_ai_message(message: types.Message):
     if not ai_model:
         await message.answer(f"Ты написал: {message.text} (ИИ-ключ не настроен)")
         return
 
-    # Показываем, что бот думает
     await bot.send_chat_action(chat_id=message.chat.id, action="typing")
     try:
         response = ai_model.generate_content(message.text)
@@ -82,5 +78,5 @@ async def main():
     print("Запуск бота со всеми функциями и ИИ...")
     await dp.start_polling(bot)
 
-if __name__ == "__main__":
+if name == "main":
     asyncio.run(main())
